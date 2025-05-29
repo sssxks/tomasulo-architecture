@@ -1,37 +1,17 @@
 `timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
-// Company:
-// Engineer:
-//
-// Create Date:    21:34:44 03/12/2012
-// Design Name:
-// Module Name:    REGS IF/ID Latch
-// Project Name:
-// Target Devices:
-// Tool versions:
-// Description:
-//
-// Dependencies:
-//
-// Revision:
-// Revision 0.01 - File Created
-// Additional Comments:
-//
-//////////////////////////////////////////////////////////////////////////////////
 
-module    REG_ID(input clk,                                      //IF/ID Latch
-                    input rst,
-                    input EN,                                       //流水寄存器使能
-                    input flush,                                    //控制竞争清除并等待
-                    input [31:0] PCOUT,                             //指令存储器指针
-                    input [31:0] IR,                                //指令存储器输出
+module    REG_ID(
+	input clk,
+	input rst,
+	input EN,
+	input flush,
+	input [31:0] PCOUT,
+	input [31:0] IR,
 
-                    output reg[31:0] IR_ID,                         //取指锁存
-                    output reg[31:0] PCurrent_ID,                   //当前存在指令地址
-                    output reg valid
-                );
-
-//reg[31:0]PCurrent_ID,IR_ID;
+	output reg[31:0] IR_ID,
+	output reg[31:0] PCurrent_ID,
+	output reg valid
+);
     always @(posedge clk or posedge rst) begin
         if(rst) begin
             IR_ID <= 32'h00000013;                            //复位清零s

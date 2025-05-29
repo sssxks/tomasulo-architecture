@@ -26,7 +26,7 @@ module FU_mul(
 
     wire[63:0] mulres;
 
-    multiplier mul(.CLK(clk),.A(A_reg),.B(B_reg),.P(mulres));
+    mult_gen_0 mul(.CLK(clk),.A(A_reg),.B(B_reg),.P(mulres));
 
     assign res = mulres[31:0];
 
