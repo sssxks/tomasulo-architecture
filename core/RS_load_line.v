@@ -10,12 +10,25 @@ module RS_load_line(
 	input[31:0] addr_in,
 	input[2:0] mem_u_b_h_w_in,
 
-	output busy,
+	output reg busy,
 
-	output [31:0] addr,
+	output reg [31:0] addr,
 	output reg[2:0] mem_u_b_h_w
 );
 
-
+// reservation station behavior: capture address, width; clear on result
+always @(posedge clk or posedge rst) begin
+    if (rst) begin
+        busy <= 1'b0;
+        addr <= 32'b0;
+        mem_u_b_h_w <= 3'b0;
+    end else if (issue) begin
+        busy <= 1'b1;
+        addr <= addr_in;
+        mem_u_b_h_w <= mem_u_b_h_w_in;
+    end else if (FU_result_taken) begin
+        busy <= 1'b0;
+    end
+end
 
 endmodule
