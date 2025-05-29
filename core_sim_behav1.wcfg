@@ -1,0 +1,489 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wave_config>
+   <wave_state>
+   </wave_state>
+   <db_ref_list>
+      <db_ref path="core_sim_behav.wdb" id="1">
+         <top_modules>
+            <top_module name="core_sim" />
+            <top_module name="glbl" />
+         </top_modules>
+      </db_ref>
+   </db_ref_list>
+   <zoom_setting>
+      <ZoomStartTime time="31304fs"></ZoomStartTime>
+      <ZoomEndTime time="61345fs"></ZoomEndTime>
+      <Cursor1Time time="53000fs"></Cursor1Time>
+   </zoom_setting>
+   <column_width_setting>
+      <NameColumnWidth column_width="252"></NameColumnWidth>
+      <ValueColumnWidth column_width="122"></ValueColumnWidth>
+   </column_width_setting>
+   <WVObjectSize size="89" />
+   <wvobject fp_name="/core_sim/clk" type="logic">
+      <obj_property name="ElementShortName">clk</obj_property>
+      <obj_property name="ObjectShortName">clk</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/ls_addr_unresolved" type="logic">
+      <obj_property name="ElementShortName">ls_addr_unresolved</obj_property>
+      <obj_property name="ObjectShortName">ls_addr_unresolved</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/struct_hazard" type="logic">
+      <obj_property name="ElementShortName">struct_hazard</obj_property>
+      <obj_property name="ObjectShortName">struct_hazard</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/normal_stall" type="logic">
+      <obj_property name="ElementShortName">normal_stall</obj_property>
+      <obj_property name="ObjectShortName">normal_stall</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/to_jump" type="logic">
+      <obj_property name="ElementShortName">to_jump</obj_property>
+      <obj_property name="ObjectShortName">to_jump</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/jump_stall" type="logic">
+      <obj_property name="ElementShortName">jump_stall</obj_property>
+      <obj_property name="ObjectShortName">jump_stall</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/PC_IF" type="array">
+      <obj_property name="ElementShortName">PC_IF[31:0]</obj_property>
+      <obj_property name="ObjectShortName">PC_IF[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/next_PC_IF" type="array">
+      <obj_property name="ElementShortName">next_PC_IF[31:0]</obj_property>
+      <obj_property name="ObjectShortName">next_PC_IF[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/PC_jump" type="array">
+      <obj_property name="ElementShortName">PC_jump[31:0]</obj_property>
+      <obj_property name="ObjectShortName">PC_jump[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/inst_IF" type="array">
+      <obj_property name="ElementShortName">inst_IF[31:0]</obj_property>
+      <obj_property name="ObjectShortName">inst_IF[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/PC_ID" type="array">
+      <obj_property name="ElementShortName">PC_ID[31:0]</obj_property>
+      <obj_property name="ObjectShortName">PC_ID[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/inst_ID" type="array">
+      <obj_property name="ElementShortName">inst_ID[31:0]</obj_property>
+      <obj_property name="ObjectShortName">inst_ID[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/ALUSrcA" type="logic">
+      <obj_property name="ElementShortName">ALUSrcA</obj_property>
+      <obj_property name="ObjectShortName">ALUSrcA</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/ALUSrcB" type="logic">
+      <obj_property name="ElementShortName">ALUSrcB</obj_property>
+      <obj_property name="ObjectShortName">ALUSrcB</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/FU_regWrite" type="logic">
+      <obj_property name="ElementShortName">FU_regWrite</obj_property>
+      <obj_property name="ObjectShortName">FU_regWrite</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/ALU_issue" type="logic">
+      <obj_property name="ElementShortName">ALU_issue</obj_property>
+      <obj_property name="ObjectShortName">ALU_issue</obj_property>
+      <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/ALU_all_busy" type="logic">
+      <obj_property name="ElementShortName">ALU_all_busy</obj_property>
+      <obj_property name="ObjectShortName">ALU_all_busy</obj_property>
+      <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/ALU_issue_tag" type="array">
+      <obj_property name="ElementShortName">ALU_issue_tag[7:0]</obj_property>
+      <obj_property name="ObjectShortName">ALU_issue_tag[7:0]</obj_property>
+      <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/mul_issue" type="logic">
+      <obj_property name="ElementShortName">mul_issue</obj_property>
+      <obj_property name="ObjectShortName">mul_issue</obj_property>
+      <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/mul_all_busy" type="logic">
+      <obj_property name="ElementShortName">mul_all_busy</obj_property>
+      <obj_property name="ObjectShortName">mul_all_busy</obj_property>
+      <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/mul_issue_tag" type="array">
+      <obj_property name="ElementShortName">mul_issue_tag[7:0]</obj_property>
+      <obj_property name="ObjectShortName">mul_issue_tag[7:0]</obj_property>
+      <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/div_issue" type="logic">
+      <obj_property name="ElementShortName">div_issue</obj_property>
+      <obj_property name="ObjectShortName">div_issue</obj_property>
+      <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/div_all_busy" type="logic">
+      <obj_property name="ElementShortName">div_all_busy</obj_property>
+      <obj_property name="ObjectShortName">div_all_busy</obj_property>
+      <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/div_issue_tag" type="array">
+      <obj_property name="ElementShortName">div_issue_tag[7:0]</obj_property>
+      <obj_property name="ObjectShortName">div_issue_tag[7:0]</obj_property>
+      <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/load_issue" type="logic">
+      <obj_property name="ElementShortName">load_issue</obj_property>
+      <obj_property name="ObjectShortName">load_issue</obj_property>
+      <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/load_all_busy" type="logic">
+      <obj_property name="ElementShortName">load_all_busy</obj_property>
+      <obj_property name="ObjectShortName">load_all_busy</obj_property>
+      <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/load_issue_tag" type="array">
+      <obj_property name="ElementShortName">load_issue_tag[7:0]</obj_property>
+      <obj_property name="ObjectShortName">load_issue_tag[7:0]</obj_property>
+      <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/store_issue" type="logic">
+      <obj_property name="ElementShortName">store_issue</obj_property>
+      <obj_property name="ObjectShortName">store_issue</obj_property>
+      <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/store_all_busy" type="logic">
+      <obj_property name="ElementShortName">store_all_busy</obj_property>
+      <obj_property name="ObjectShortName">store_all_busy</obj_property>
+      <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/ujump_issue" type="logic">
+      <obj_property name="ElementShortName">ujump_issue</obj_property>
+      <obj_property name="ObjectShortName">ujump_issue</obj_property>
+      <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/branch_issue" type="logic">
+      <obj_property name="ElementShortName">branch_issue</obj_property>
+      <obj_property name="ObjectShortName">branch_issue</obj_property>
+      <obj_property name="CustomSignalColor">#00FFFF</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/ImmSel" type="array">
+      <obj_property name="ElementShortName">ImmSel[2:0]</obj_property>
+      <obj_property name="ObjectShortName">ImmSel[2:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/ALU_op" type="array">
+      <obj_property name="ElementShortName">ALU_op[3:0]</obj_property>
+      <obj_property name="ObjectShortName">ALU_op[3:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/JUMP_op" type="array">
+      <obj_property name="ElementShortName">JUMP_op[3:0]</obj_property>
+      <obj_property name="ObjectShortName">JUMP_op[3:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/Imm" type="array">
+      <obj_property name="ElementShortName">Imm[31:0]</obj_property>
+      <obj_property name="ObjectShortName">Imm[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/ls_addr" type="array">
+      <obj_property name="ElementShortName">ls_addr[31:0]</obj_property>
+      <obj_property name="ObjectShortName">ls_addr[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/rs1_data" type="array">
+      <obj_property name="ElementShortName">rs1_data[39:0]</obj_property>
+      <obj_property name="ObjectShortName">rs1_data[39:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/rs2_data" type="array">
+      <obj_property name="ElementShortName">rs2_data[39:0]</obj_property>
+      <obj_property name="ObjectShortName">rs2_data[39:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/ALUA" type="array">
+      <obj_property name="ElementShortName">ALUA[39:0]</obj_property>
+      <obj_property name="ObjectShortName">ALUA[39:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/ALUB" type="array">
+      <obj_property name="ElementShortName">ALUB[39:0]</obj_property>
+      <obj_property name="ObjectShortName">ALUB[39:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/ALU_cdb_request" type="logic">
+      <obj_property name="ElementShortName">ALU_cdb_request</obj_property>
+      <obj_property name="ObjectShortName">ALU_cdb_request</obj_property>
+      <obj_property name="CustomSignalColor">#FAAFBE</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+      <obj_property name="WaveformStyle">STYLE_DIGITAL</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/ALU_cdb_in" type="array">
+      <obj_property name="ElementShortName">ALU_cdb_in[39:0]</obj_property>
+      <obj_property name="ObjectShortName">ALU_cdb_in[39:0]</obj_property>
+      <obj_property name="CustomSignalColor">#FAAFBE</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+      <obj_property name="WaveformStyle">STYLE_DIGITAL</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/mul_cdb_request" type="logic">
+      <obj_property name="ElementShortName">mul_cdb_request</obj_property>
+      <obj_property name="ObjectShortName">mul_cdb_request</obj_property>
+      <obj_property name="CustomSignalColor">#FAAFBE</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+      <obj_property name="WaveformStyle">STYLE_DIGITAL</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/mul_cdb_in" type="array">
+      <obj_property name="ElementShortName">mul_cdb_in[39:0]</obj_property>
+      <obj_property name="ObjectShortName">mul_cdb_in[39:0]</obj_property>
+      <obj_property name="CustomSignalColor">#FAAFBE</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+      <obj_property name="WaveformStyle">STYLE_DIGITAL</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/div_cdb_request" type="logic">
+      <obj_property name="ElementShortName">div_cdb_request</obj_property>
+      <obj_property name="ObjectShortName">div_cdb_request</obj_property>
+      <obj_property name="CustomSignalColor">#FAAFBE</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+      <obj_property name="WaveformStyle">STYLE_DIGITAL</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/div_cdb_in" type="array">
+      <obj_property name="ElementShortName">div_cdb_in[39:0]</obj_property>
+      <obj_property name="ObjectShortName">div_cdb_in[39:0]</obj_property>
+      <obj_property name="CustomSignalColor">#FAAFBE</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+      <obj_property name="WaveformStyle">STYLE_DIGITAL</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/load_cdb_request" type="logic">
+      <obj_property name="ElementShortName">load_cdb_request</obj_property>
+      <obj_property name="ObjectShortName">load_cdb_request</obj_property>
+      <obj_property name="CustomSignalColor">#FAAFBE</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+      <obj_property name="WaveformStyle">STYLE_DIGITAL</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/load_cdb_in" type="array">
+      <obj_property name="ElementShortName">load_cdb_in[39:0]</obj_property>
+      <obj_property name="ObjectShortName">load_cdb_in[39:0]</obj_property>
+      <obj_property name="CustomSignalColor">#FAAFBE</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+      <obj_property name="WaveformStyle">STYLE_DIGITAL</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/reg_w_tag" type="array">
+      <obj_property name="ElementShortName">reg_w_tag[7:0]</obj_property>
+      <obj_property name="ObjectShortName">reg_w_tag[7:0]</obj_property>
+      <obj_property name="CustomSignalColor">#FAAFBE</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+      <obj_property name="WaveformStyle">STYLE_DIGITAL</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/cdb" type="array">
+      <obj_property name="ElementShortName">cdb[40:0]</obj_property>
+      <obj_property name="ObjectShortName">cdb[40:0]</obj_property>
+      <obj_property name="CustomSignalColor">#FFD700</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+      <obj_property name="WaveformStyle">STYLE_DIGITAL</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/alu/rs1_busy" type="logic">
+      <obj_property name="ElementShortName">rs1_busy</obj_property>
+      <obj_property name="ObjectShortName">rs1_busy</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/alu/rs2_busy" type="logic">
+      <obj_property name="ElementShortName">rs2_busy</obj_property>
+      <obj_property name="ObjectShortName">rs2_busy</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/alu/rs3_busy" type="logic">
+      <obj_property name="ElementShortName">rs3_busy</obj_property>
+      <obj_property name="ObjectShortName">rs3_busy</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/mul/rs1_busy" type="logic">
+      <obj_property name="ElementShortName">rs1_busy</obj_property>
+      <obj_property name="ObjectShortName">rs1_busy</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/mul/rs2_busy" type="logic">
+      <obj_property name="ElementShortName">rs2_busy</obj_property>
+      <obj_property name="ObjectShortName">rs2_busy</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/mul/rs3_busy" type="logic">
+      <obj_property name="ElementShortName">rs3_busy</obj_property>
+      <obj_property name="ObjectShortName">rs3_busy</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/div/rs1_busy" type="logic">
+      <obj_property name="ElementShortName">rs1_busy</obj_property>
+      <obj_property name="ObjectShortName">rs1_busy</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/div/rs2_busy" type="logic">
+      <obj_property name="ElementShortName">rs2_busy</obj_property>
+      <obj_property name="ObjectShortName">rs2_busy</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/div/rs3_busy" type="logic">
+      <obj_property name="ElementShortName">rs3_busy</obj_property>
+      <obj_property name="ObjectShortName">rs3_busy</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/ls/rs1_load_busy" type="logic">
+      <obj_property name="ElementShortName">rs1_load_busy</obj_property>
+      <obj_property name="ObjectShortName">rs1_load_busy</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/ls/rs2_load_busy" type="logic">
+      <obj_property name="ElementShortName">rs2_load_busy</obj_property>
+      <obj_property name="ObjectShortName">rs2_load_busy</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/ls/rs3_load_busy" type="logic">
+      <obj_property name="ElementShortName">rs3_load_busy</obj_property>
+      <obj_property name="ObjectShortName">rs3_load_busy</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/ls/rs1_store_busy" type="logic">
+      <obj_property name="ElementShortName">rs1_store_busy</obj_property>
+      <obj_property name="ObjectShortName">rs1_store_busy</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/ls/rs2_store_busy" type="logic">
+      <obj_property name="ElementShortName">rs2_store_busy</obj_property>
+      <obj_property name="ObjectShortName">rs2_store_busy</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/ls/rs3_store_busy" type="logic">
+      <obj_property name="ElementShortName">rs3_store_busy</obj_property>
+      <obj_property name="ObjectShortName">rs3_store_busy</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/tregs/tags[1]" type="array">
+      <obj_property name="ElementShortName">[1][7:0]</obj_property>
+      <obj_property name="ObjectShortName">[1][7:0]</obj_property>
+      <obj_property name="CustomSignalColor">#808000</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/tregs/tags[2]" type="array">
+      <obj_property name="ElementShortName">[2][7:0]</obj_property>
+      <obj_property name="ObjectShortName">[2][7:0]</obj_property>
+      <obj_property name="CustomSignalColor">#808000</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/tregs/tags[3]" type="array">
+      <obj_property name="ElementShortName">[3][7:0]</obj_property>
+      <obj_property name="ObjectShortName">[3][7:0]</obj_property>
+      <obj_property name="CustomSignalColor">#808000</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/tregs/tags[4]" type="array">
+      <obj_property name="ElementShortName">[4][7:0]</obj_property>
+      <obj_property name="ObjectShortName">[4][7:0]</obj_property>
+      <obj_property name="CustomSignalColor">#808000</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/tregs/tags[5]" type="array">
+      <obj_property name="ElementShortName">[5][7:0]</obj_property>
+      <obj_property name="ObjectShortName">[5][7:0]</obj_property>
+      <obj_property name="CustomSignalColor">#808000</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/tregs/tags[6]" type="array">
+      <obj_property name="ElementShortName">[6][7:0]</obj_property>
+      <obj_property name="ObjectShortName">[6][7:0]</obj_property>
+      <obj_property name="CustomSignalColor">#808000</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/tregs/tags[7]" type="array">
+      <obj_property name="ElementShortName">[7][7:0]</obj_property>
+      <obj_property name="ObjectShortName">[7][7:0]</obj_property>
+      <obj_property name="CustomSignalColor">#808000</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/tregs/tags[8]" type="array">
+      <obj_property name="ElementShortName">[8][7:0]</obj_property>
+      <obj_property name="ObjectShortName">[8][7:0]</obj_property>
+      <obj_property name="CustomSignalColor">#808000</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/tregs/tags[9]" type="array">
+      <obj_property name="ElementShortName">[9][7:0]</obj_property>
+      <obj_property name="ObjectShortName">[9][7:0]</obj_property>
+      <obj_property name="CustomSignalColor">#808000</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/tregs/tags[10]" type="array">
+      <obj_property name="ElementShortName">[10][7:0]</obj_property>
+      <obj_property name="ObjectShortName">[10][7:0]</obj_property>
+      <obj_property name="CustomSignalColor">#808000</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/tregs/tags[11]" type="array">
+      <obj_property name="ElementShortName">[11][7:0]</obj_property>
+      <obj_property name="ObjectShortName">[11][7:0]</obj_property>
+      <obj_property name="CustomSignalColor">#808000</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/tregs/tags[12]" type="array">
+      <obj_property name="ElementShortName">[12][7:0]</obj_property>
+      <obj_property name="ObjectShortName">[12][7:0]</obj_property>
+      <obj_property name="CustomSignalColor">#808000</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/tregs/register[1]" type="array">
+      <obj_property name="ElementShortName">[1][31:0]</obj_property>
+      <obj_property name="ObjectShortName">[1][31:0]</obj_property>
+      <obj_property name="CustomSignalColor">#008000</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/tregs/register[2]" type="array">
+      <obj_property name="ElementShortName">[2][31:0]</obj_property>
+      <obj_property name="ObjectShortName">[2][31:0]</obj_property>
+      <obj_property name="CustomSignalColor">#008000</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/tregs/register[3]" type="array">
+      <obj_property name="ElementShortName">[3][31:0]</obj_property>
+      <obj_property name="ObjectShortName">[3][31:0]</obj_property>
+      <obj_property name="CustomSignalColor">#008000</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/tregs/register[4]" type="array">
+      <obj_property name="ElementShortName">[4][31:0]</obj_property>
+      <obj_property name="ObjectShortName">[4][31:0]</obj_property>
+      <obj_property name="CustomSignalColor">#008000</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/tregs/register[5]" type="array">
+      <obj_property name="ElementShortName">[5][31:0]</obj_property>
+      <obj_property name="ObjectShortName">[5][31:0]</obj_property>
+      <obj_property name="CustomSignalColor">#008000</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/tregs/register[6]" type="array">
+      <obj_property name="ElementShortName">[6][31:0]</obj_property>
+      <obj_property name="ObjectShortName">[6][31:0]</obj_property>
+      <obj_property name="CustomSignalColor">#008000</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/tregs/register[7]" type="array">
+      <obj_property name="ElementShortName">[7][31:0]</obj_property>
+      <obj_property name="ObjectShortName">[7][31:0]</obj_property>
+      <obj_property name="CustomSignalColor">#008000</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/tregs/register[8]" type="array">
+      <obj_property name="ElementShortName">[8][31:0]</obj_property>
+      <obj_property name="ObjectShortName">[8][31:0]</obj_property>
+      <obj_property name="CustomSignalColor">#008000</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/tregs/register[9]" type="array">
+      <obj_property name="ElementShortName">[9][31:0]</obj_property>
+      <obj_property name="ObjectShortName">[9][31:0]</obj_property>
+      <obj_property name="CustomSignalColor">#008000</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/tregs/register[10]" type="array">
+      <obj_property name="ElementShortName">[10][31:0]</obj_property>
+      <obj_property name="ObjectShortName">[10][31:0]</obj_property>
+      <obj_property name="CustomSignalColor">#008000</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/tregs/register[11]" type="array">
+      <obj_property name="ElementShortName">[11][31:0]</obj_property>
+      <obj_property name="ObjectShortName">[11][31:0]</obj_property>
+      <obj_property name="CustomSignalColor">#008000</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject fp_name="/core_sim/core/tregs/register[12]" type="array">
+      <obj_property name="ElementShortName">[12][31:0]</obj_property>
+      <obj_property name="ObjectShortName">[12][31:0]</obj_property>
+      <obj_property name="CustomSignalColor">#008000</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+</wave_config>
