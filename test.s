@@ -8,11 +8,11 @@ lw x2, 4(x0)
 lw x4, 8(x0)
 
 
-# 0C x1=0x18
+# 0C x1=0x18, not present because of WAW by 10
 add x1, x2, x4
 
 
-# 10 x1=0x17 overwrite
+# 10 x1=0x17 overwrite by 20
 addi x1, x1, -1
 
 
@@ -28,11 +28,11 @@ lw x6, 16(x0)
 lw x7, 20(x0)
 
 
-# 20 x1=0x08
+# 20 x1=0x08, not present
 sub x1,x4,x2
 
 
-# 24 x1=0xfffffffd
+# 24 x1=0xfffffffd, not present
 addi x1,x0,-3
 
 
@@ -84,11 +84,11 @@ auipc x1, 0xffff0
 div x8, x7, x2
 
 
-# 58 x9=0x140
+# 58 x9=0x140, overwritten by 5C
 mul x9, x4, x5
 
 
-# 5C x9=0xfff0000
+# 5C x9=0x0fff0000
 mul x9, x8, x2
 
 
@@ -104,7 +104,7 @@ sw x8, 24(x0)
 sw x9, 24(x0)
 
 
-# 6C x7=0xfff0000
+# 6C x7=0x0fff0000
 lw x10, 24(x0)
 
 
