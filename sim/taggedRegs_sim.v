@@ -32,44 +32,52 @@ module taggedRegs_sim;
 		.to_jump(to_jump),.jump_stall(jump_stall));
 
 	initial begin
-		clk = 1;
-		rst = 1;
-		issue = 0;
-		branch_issue = 0;
-		ujump_issue = 0;
-		raddr_A = 1;
-		raddr_B = 2;
-		waddr = 0;
-		w_tag = 8'b10000_001;
+        // Stimulus timeline:
+        //   0ns: rst=1, issue=0, branch_issue=0, ujump=0 => reg tags/data cleared, rdata_A=0, rdata_B=0, to_jump=0
+        clk = 1;
+        rst = 1;
+        issue = 0;
+        branch_issue = 0;
+        ujump_issue = 0;
+        raddr_A = 1;
+        raddr_B = 2;
+        waddr = 0;
+        w_tag = 8'b10000_001;
 
-		ALU_cdb_request = 0;
-		ALU_cdb_out = 40'h82_0000_0048;
+        ALU_cdb_request = 0;
+        ALU_cdb_out = 40'h82_0000_0048;
 
-		#2;
-		rst = 0;
-		issue = 1;
-		waddr = 1;
+        // 2ns: rst->0, issue->1, waddr=1 => schedule write to reg1 with tag=0x81
+        #2;
+        rst = 0;
+        issue = 1;
+        waddr = 1;
 
-		#10;
-		w_tag = 8'b10000_010;
+        // 12ns: w_tag=0x82 => update tag for reg1 next cycle
+        #10;
+        w_tag = 8'b10000_010;
 
-		#10;
-		waddr = 2;
-		w_tag = 8'b10000_100;
+        // 22ns: waddr=2, w_tag=0x84 => schedule write to reg2
+        #10;
+        waddr = 2;
+        w_tag = 8'b10000_100;
 
-		#10;
-		issue = 0;
-		ujump_issue = 1;
+        // 32ns: issue=0, ujump_issue=1 => to_jump asserted but jump_stall until tag clears
+        #10;
+        issue = 0;
+        ujump_issue = 1;
 
-		#20;
-		ALU_cdb_request = 1;
+        // 52ns: ALU_cdb_request=1 => tag match for reg1, clear tag1, reg1<=PC+4, jump_stall deasserts
+        #20;
+        ALU_cdb_request = 1;
 
-		#10;
-		ALU_cdb_request = 0;
+        // 62ns: ALU_cdb_request=0 => finish CDB broadcast
+        #10;
+        ALU_cdb_request = 0;
 
-		#10;
-		ujump_issue = 0;
-
+        // 72ns: ujump_issue=0 => end jump sequence
+        #10;
+        ujump_issue = 0;
 	end
 
 	always #5 clk = ~clk;

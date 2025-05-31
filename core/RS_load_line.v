@@ -16,7 +16,7 @@ module RS_load_line(
 	output reg[2:0] mem_u_b_h_w
 );
 
-// reservation station behavior: capture address, width; clear on result
+// Latch busy, address, and mem type on issue; clear busy on result taken; reset on rst
 always @(posedge clk or posedge rst) begin
     if (rst) begin
         busy <= 1'b0;

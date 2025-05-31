@@ -2,11 +2,11 @@
 
 `include "define.vh"
 
-module DecodeIssue(
+module DecodeDispatch(
 	input[31:0] inst,
 
-	output ALU_issue, mul_issue, div_issue, load_issue, store_issue,
-	output ujump_issue, branch_issue,
+	output ALU_dispatch, mul_dispatch, div_dispatch, load_dispatch, store_dispatch,
+	output ujump_dispatch, branch_dispatch, // ujump: unconditional jump, branch: conditional jump
 
 	output[2:0] ImmSel,
 	output[3:0] ALU_op,
@@ -103,14 +103,14 @@ module DecodeIssue(
 	wire L_valid = LW | LH | LB | LHU | LBU;
 	wire S_valid = SW | SH | SB;
 
-	assign ALU_issue = (AND | OR | ADD | XOR | SLL | SRL | SRA | SUB | SLT | SLTU
+	assign ALU_dispatch = (AND | OR | ADD | XOR | SLL | SRL | SRA | SUB | SLT | SLTU
 		| I_valid | LUI | AUIPC) & |rd;
-	assign mul_issue = (MUL | MULH | MULHSU | MULHU) & |rd;
-	assign div_issue = (DIV | DIVU | REM | REMU) & |rd;
-	assign load_issue = L_valid & |rd;
-	assign store_issue = S_valid;
-	assign branch_issue = B_valid;
-	assign ujump_issue = JAL | JALR;
+	assign mul_dispatch = (MUL | MULH | MULHSU | MULHU) & |rd;
+	assign div_dispatch = (DIV | DIVU | REM | REMU) & |rd;
+	assign load_dispatch = L_valid & |rd;
+	assign store_dispatch = S_valid;
+	assign branch_dispatch = B_valid;
+	assign ujump_dispatch = JAL | JALR;
 
 	localparam Imm_type_I = 3'b001;
 	localparam Imm_type_B = 3'b010;
@@ -168,6 +168,6 @@ module DecodeIssue(
 
 	assign ALUSrcB = I_valid | LUI | AUIPC;
 
-	assign FU_regWrite = ALU_issue | mul_issue | div_issue | load_issue;
+	assign FU_regWrite = ALU_dispatch | mul_dispatch | div_dispatch | load_dispatch;
 
 endmodule
