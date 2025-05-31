@@ -3,7 +3,7 @@
 `include "define.vh"
 
 module unit_load_store(
-	input clk, rst,
+	input clk, rst, flush,
 	input[`NUM_CDBBITS-1:0]cdb,
 	output cdb_request,
 	output[`NUM_CDBBITS-2:0] cdb_out,
@@ -49,15 +49,15 @@ module unit_load_store(
 	assign load_all_busy = rs1_load_busy & rs2_load_busy & rs3_load_busy;
 	assign load_issue_tag = {`FU_LOAD_TAG, rs1_load_issue, rs2_load_issue, rs3_load_issue} &{`NUM_SRBITS{load_issue}};
 
-	RS_load_line rs1_load(.clk(clk),.rst(rst),.issue(rs1_load_issue),.cdb(cdb),
+	RS_load_line rs1_load(.clk(clk),.rst(rst),.flush(flush),.issue(rs1_load_issue),.cdb(cdb),
 		.FU_result_taken(rs1_load_result_taken),.addr_in(ls_addr_in),.mem_u_b_h_w_in(ls_u_b_h_w_in),
 		.busy(rs1_load_busy),.addr(rs1_load_addr),.mem_u_b_h_w(rs1_load_u_b_h_w));
 
-	RS_load_line rs2_load(.clk(clk),.rst(rst),.issue(rs2_load_issue),.cdb(cdb),
+	RS_load_line rs2_load(.clk(clk),.rst(rst),.flush(flush),.issue(rs2_load_issue),.cdb(cdb),
 		.FU_result_taken(rs2_load_result_taken),.addr_in(ls_addr_in),.mem_u_b_h_w_in(ls_u_b_h_w_in),
 		.busy(rs2_load_busy),.addr(rs2_load_addr),.mem_u_b_h_w(rs2_load_u_b_h_w));
 
-	RS_load_line rs3_load(.clk(clk),.rst(rst),.issue(rs3_load_issue),.cdb(cdb),
+	RS_load_line rs3_load(.clk(clk),.rst(rst),.flush(flush),.issue(rs3_load_issue),.cdb(cdb),
 		.FU_result_taken(rs3_load_result_taken),.addr_in(ls_addr_in),.mem_u_b_h_w_in(ls_u_b_h_w_in),
 		.busy(rs3_load_busy),.addr(rs3_load_addr),.mem_u_b_h_w(rs3_load_u_b_h_w));
 
@@ -74,17 +74,17 @@ module unit_load_store(
 	assign store_all_busy = rs1_store_busy & rs2_store_busy & rs3_store_busy;
 	assign store_conflict_stall = rs1_s_addr_match | rs2_s_addr_match | rs3_s_addr_match;
 
-	RS_store_line rs1_store(.clk(clk),.rst(rst),.issue(rs1_store_issue),.result_taken(rs1_store_result_taken),
+	RS_store_line rs1_store(.clk(clk),.rst(rst),.flush(flush),.issue(rs1_store_issue),.result_taken(rs1_store_result_taken),
 		.cdb(cdb),.q_data_in(store_q_data_in),.addr_in(ls_addr_in),.data_in(store_data_in),
 		.mem_u_b_h_w_in(ls_u_b_h_w_in),.data_ready(rs1_store_data_ready),
 		.busy(rs1_store_busy),.addr(rs1_store_addr),.data(rs1_store_data),.mem_u_b_h_w(rs1_store_u_b_h_w));
 
-	RS_store_line rs2_store(.clk(clk),.rst(rst),.issue(rs2_store_issue),.result_taken(rs2_store_result_taken),
+	RS_store_line rs2_store(.clk(clk),.rst(rst),.flush(flush),.issue(rs2_store_issue),.result_taken(rs2_store_result_taken),
 		.cdb(cdb),.q_data_in(store_q_data_in),.addr_in(ls_addr_in),.data_in(store_data_in),
 		.mem_u_b_h_w_in(ls_u_b_h_w_in),.data_ready(rs2_store_data_ready),
 		.busy(rs2_store_busy),.addr(rs2_store_addr),.data(rs2_store_data),.mem_u_b_h_w(rs2_store_u_b_h_w));
 
-	RS_store_line rs3_store(.clk(clk),.rst(rst),.issue(rs3_store_issue),.result_taken(rs3_store_result_taken),
+	RS_store_line rs3_store(.clk(clk),.rst(rst),.flush(flush),.issue(rs3_store_issue),.result_taken(rs3_store_result_taken),
 		.cdb(cdb),.q_data_in(store_q_data_in),.addr_in(ls_addr_in),.data_in(store_data_in),
 		.mem_u_b_h_w_in(ls_u_b_h_w_in),.data_ready(rs3_store_data_ready),
 		.busy(rs3_store_busy),.addr(rs3_store_addr),.data(rs3_store_data),.mem_u_b_h_w(rs3_store_u_b_h_w));

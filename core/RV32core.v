@@ -108,12 +108,73 @@ module  RV32core(
 	wire[40:0] cdb;            // [40]=valid, [39:32]=tag, [31:0]=data
 
 
+	// ROB integration
+	wire rob_alloc;
+	wire [31:0] rob_alloc_pc;
+	wire rob_alloc_pred_taken;
+	wire [31:0] rob_alloc_pred_target;
+	wire [7:0] rob_alloc_dest_tag;
+	wire rob_commit_valid;
+	wire rob_commit_is_branch;
+	wire rob_commit_mispredict;
+	wire rob_commit_actual_taken;
+	wire [31:0] rob_commit_actual_target;
+	wire [7:0] rob_commit_dest_tag;
+	wire [31:0] rob_commit_value;
+	wire [3:0] rob_commit_index;
+	wire [31*`NUM_SRBITS-1:0] rob_commit_tags_bus;
+	wire [31*`NUM_SRBITS-1:0] all_tags_bus;
+
+	assign rob_alloc = ALU_issue | mul_issue | div_issue | load_issue | store_issue | branch_issue | ujump_issue;
+	assign rob_alloc_pc = PC_ID;
+	assign rob_alloc_pred_taken = branch_issue & pred_taken;
+	assign rob_alloc_pred_target = pred_target;
+	assign rob_alloc_dest_tag = reg_w_tag;
+
+	// Instantiate ROB with RAT checkpoints
+	ROB rob0(
+		.clk(debug_clk),
+		.rst(rst),
+		.alloc_tags_bus(all_tags_bus),
+		.alloc(rob_alloc),
+		.alloc_pc(rob_alloc_pc),
+		.alloc_pred_taken(rob_alloc_pred_taken),
+		.alloc_pred_target(rob_alloc_pred_target),
+		.alloc_dest_tag(rob_alloc_dest_tag),
+		.cdb(cdb),
+		.commit_valid(rob_commit_valid),
+		.commit_is_branch(rob_commit_is_branch),
+		.commit_mispredict(rob_commit_mispredict),
+		.commit_actual_taken(rob_commit_actual_taken),
+		.commit_actual_target(rob_commit_actual_target),
+		.commit_dest_tag(rob_commit_dest_tag),
+		.commit_value(rob_commit_value),
+		.commit_index(rob_commit_index),
+		.commit_tags_bus(rob_commit_tags_bus)
+	);
+
+	// Predictor outputs
+	wire pred_taken;
+	wire [31:0] pred_target;
+
+	// Instantiate branch predictor
+	BranchPredictor bp0(
+		.clk(debug_clk),
+		.rst(rst),
+		.pc(PC_IF),
+		.update(rob_commit_valid & rob_commit_is_branch),
+		.update_taken(rob_commit_actual_taken),
+		.update_target(rob_commit_actual_target),
+		.taken(pred_taken),
+		.target(pred_target)
+	);
+
 	// ----- Instruction Fetch (IF) Stage -----
 	// Program Counter register - only updates when no stalls are active
 	REG32 REG_PC(
 		.clk(debug_clk),
 		.rst(rst),
-		.CE(~normal_stall & ~jump_stall),  // Enable only when no stalls
+		.CE(~normal_stall),  // Enable only when no stalls
 		.D(next_PC_IF),                    // Next PC value
 		.Q(PC_IF)                         // Current PC output
 	);
@@ -125,12 +186,23 @@ module  RV32core(
 		.c(PCp4_IF)                       // PC+4 result
 	);
 
-	// Multiplexer to select between PC+4 and jump target
+	// Predictor-driven PC selection
+	// First: prediction between PC+4 and predicted target
+	MUX2T1_32 mux_pred(
+		.I0(PCp4_IF),
+		.I1(pred_target),
+		.s(pred_taken),
+		.o(fetch_pc_pred)
+	);
+
+	// Then: mispredict redirect
+	wire use_misp = rob_commit_valid & rob_commit_mispredict;
+	wire [31:0] fetch_pc_pred;
 	MUX2T1_32 mux_IF(
-		.I0(PCp4_IF),                      // Sequential next PC
-		.I1(PC_jump),                      // Jump/branch target
-		.s(to_jump),                       // Select jump if branch taken
-		.o(next_PC_IF)                     // Selected next PC
+		.I0(fetch_pc_pred),
+		.I1(rob_commit_actual_target),
+		.s(use_misp),
+		.o(next_PC_IF)
 	);
 
 	// Instruction memory (ROM) - fetches instruction at current PC
@@ -146,8 +218,8 @@ module  RV32core(
 	REG_ID reg_ID(
 		.clk(debug_clk),
 		.rst(rst),
-		.EN(~normal_stall & ~jump_stall),  // Only update when no stalls
-		.flush(to_jump & ~jump_stall),     // Clear on taken branch/jump
+		.EN(~normal_stall),  // Only update when no stalls
+		.flush(use_misp),     // Flush on mispredict
 		.PCOUT(PC_IF),                     // PC from IF stage
 		.IR(inst_IF),                      // Instruction from IF stage
 		.IR_ID(inst_ID),                   // Instruction to ID stage
@@ -190,7 +262,7 @@ module  RV32core(
 	tristate #(8) div_tag(.dout(reg_w_tag), .din(div_issue_tag), .en(div_issue));
 	tristate #(8) load_tag(.dout(reg_w_tag), .din(load_issue_tag), .en(load_issue));
 
-	// Register file with register renaming support
+	// Register file with register renaming and checkpoint support
 	taggedRegs tregs(
 		.clk(debug_clk),
 		.rst(rst),
@@ -209,7 +281,12 @@ module  RV32core(
 		.PC(PC_ID),                        // PC for JAL/JALR link address
 		// Debug interface
 		.Debug_addr(debug_addr[4:0]),      // Debug register select
-		.Debug_regs(debug_regs)            // Debug register output
+		.Debug_regs(debug_regs),
+		// RAT checkpoint/restore
+		.all_tags_bus(all_tags_bus),
+		.restore(rob_commit_valid & rob_commit_mispredict),
+		.restore_index(rob_commit_index),
+		.restore_tags_bus(rob_commit_tags_bus)
 	);
 
 	// ----- ALU Input Selection -----
@@ -282,6 +359,7 @@ module  RV32core(
 		.clk(debug_clk),
 		.rst(rst),
 		.issue(ALU_issue & ~normal_stall),  // Only issue when no stalls
+		.flush(use_misp),  // Add flush on mispredict
 		.cdb(cdb),                         // Common data bus for operand updates
 		.ALUControl_in(ALU_op),            // ALU operation type
 		// Input operands with tags
@@ -301,6 +379,7 @@ module  RV32core(
 		.clk(debug_clk),
 		.rst(rst),
 		.issue(mul_issue & ~normal_stall),  // Only issue when no stalls
+		.flush(use_misp),  // Add flush on mispredict
 		.cdb(cdb),                         // Common data bus for operand updates
 		// Input operands with tags (directly from register file)
 		.q1_in(rs1_data[39:32]),           // Input A tag
@@ -310,7 +389,7 @@ module  RV32core(
 		// Status and result signals
 		.all_busy(mul_all_busy),           // All reservation stations busy
 		.cdb_request(mul_cdb_request),     // Request to broadcast result
-		.cdb_out(mul_cdb_in),              // Result data for CDB
+		.cdb_out(mul_cdb_in),              // Multiply result data
 		.issue_tag(mul_issue_tag)           // Tag assigned to this operation
 	);
 
@@ -319,6 +398,7 @@ module  RV32core(
 		.clk(debug_clk),
 		.rst(rst),
 		.issue(div_issue & ~normal_stall),  // Only issue when no stalls
+		.flush(use_misp),  // Add flush on mispredict
 		.cdb(cdb),                         // Common data bus for operand updates
 		// Input operands with tags (directly from register file)
 		.q1_in(rs1_data[39:32]),           // Input A tag
@@ -328,7 +408,7 @@ module  RV32core(
 		// Status and result signals
 		.all_busy(div_all_busy),           // All reservation stations busy
 		.cdb_request(div_cdb_request),     // Request to broadcast result
-		.cdb_out(div_cdb_in),              // Result data for CDB
+		.cdb_out(div_cdb_in),              // Divide result data
 		.issue_tag(div_issue_tag)           // Tag assigned to this operation
 	);
 
@@ -336,6 +416,7 @@ module  RV32core(
 	unit_load_store ls(
 		.clk(debug_clk),
 		.rst(rst),
+		.flush(use_misp),                  // Add flush on mispredict
 		.cdb(cdb),                         // Common data bus for operand updates
 		.cdb_request(load_cdb_request),     // Request to broadcast load result
 		.cdb_out(load_cdb_in),              // Load result data for CDB

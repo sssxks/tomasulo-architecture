@@ -16,6 +16,12 @@ module taggedRegs(
 	input[31:0] PC,
 	output[`NUM_CDBBITS-2:0] rdata_A, rdata_B,
 
+	// Snapshot & restore ports
+	input restore,
+	input[`NUM_SRBITS*31-1:0] restore_tags_bus,
+	input[3:0] restore_index,
+	output[`NUM_SRBITS*31-1:0] all_tags_bus,
+
 	input[4:0] Debug_addr,
 	output[39:0] Debug_regs
 );
@@ -36,6 +42,15 @@ module taggedRegs(
 
 	wire addr_match[1:31];
 	wire cdb_match[1:31];
+
+//-----------------------------------------------------------------------------
+// Pack current tags into a wide bus for ROB allocation
+generate
+    genvar gi;
+    for (gi = 1; gi < 32; gi = gi + 1) begin : pack_tags
+        assign all_tags_bus[(gi*`NUM_SRBITS-1) -: `NUM_SRBITS] = tags[gi];
+    end
+endgenerate
 
 //-----------------------------------------------------------------------------
 // Write-back matching logic
@@ -68,6 +83,18 @@ module taggedRegs(
 			end
 		end
 	endgenerate
+
+//-----------------------------------------------------------------------------
+// Restore snapshot logic
+integer ri;
+always @(posedge clk or posedge rst) begin
+    if (rst) begin
+        // tags reset by individual always blocks
+    end else if (restore) begin
+        for (ri = 1; ri < 32; ri = ri + 1)
+            tags[ri] <= restore_tags_bus[(ri*`NUM_SRBITS-1) -: `NUM_SRBITS];
+    end
+end
 
 //-----------------------------------------------------------------------------
 // Debug port for introspection

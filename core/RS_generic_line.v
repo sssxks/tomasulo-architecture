@@ -13,6 +13,7 @@
 //-----------------------------------------------------------------------------
 module RS_generic_line(
     input clk, rst, issue,                // issue = new op arrives
+    input flush,                          // flush on mispredict
     input FU_result_taken,                // previous result consumed?
     input[40:0] cdb,                      // broadcast bus
 
@@ -46,22 +47,25 @@ wire init_clk_cdb_match_q2 = cdb[`CDB_ON_FIELD] && cdb[`CDB_TAG_FIELD] == q2_in;
 assign data_ready = busy && q1 == 8'b0 && q2 == 8'b0;
 
 //-----------------------------------------------------------------------------
-// busy goes high on issue, low when its FU result is taken.
+// busy goes high on issue, low when its FU result is taken or on flush
 //-----------------------------------------------------------------------------
 always @(posedge clk or posedge rst) begin
-    if (rst)            busy <= 1'b0;
-    else if (issue)     busy <= 1'b1;
+    if (rst)                busy <= 1'b0;
+    else if (flush)         busy <= 1'b0;
+    else if (issue)         busy <= 1'b1;
     else if (FU_result_taken) busy <= 1'b0;
 end
 
 //-----------------------------------------------------------------------------
-// Operand #1 latch logic:
+// Operand #1 latch logic (cleared on flush):
 //  - On issue: if CDB already had our tag, grab data immediately.
 //  - Else capture tag+value from inputs.
 //  - Later, when CDB broadcasts matching tag, grab data.
 //-----------------------------------------------------------------------------
 always @(posedge clk or posedge rst) begin
     if (rst) begin
+        q1 <= 8'b0; v1 <= 32'b0;
+    end else if (flush) begin
         q1 <= 8'b0; v1 <= 32'b0;
     end else if (issue) begin
         if (init_clk_cdb_match_q1) begin
@@ -78,10 +82,12 @@ always @(posedge clk or posedge rst) begin
 end
 
 //-----------------------------------------------------------------------------
-// Operand #2 latch logic (identical to operand #1).
+// Operand #2 latch logic (identical to operand #1, cleared on flush).
 //-----------------------------------------------------------------------------
 always @(posedge clk or posedge rst) begin
     if (rst) begin
+        q2 <= 8'b0; v2 <= 32'b0;
+    end else if (flush) begin
         q2 <= 8'b0; v2 <= 32'b0;
     end else if (issue) begin
         if (init_clk_cdb_match_q2) begin

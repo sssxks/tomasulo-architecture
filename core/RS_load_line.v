@@ -3,7 +3,7 @@
 `include "define.vh"
 
 module RS_load_line(
-	input clk, rst, issue,
+	input clk, rst, issue, flush,
 	input FU_result_taken,
 	input[40:0] cdb,
 
@@ -22,6 +22,8 @@ always @(posedge clk or posedge rst) begin
         busy <= 1'b0;
         addr <= 32'b0;
         mem_u_b_h_w <= 3'b0;
+    end else if (flush) begin
+        busy <= 1'b0;
     end else if (issue) begin
         busy <= 1'b1;
         addr <= addr_in;

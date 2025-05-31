@@ -1,8 +1,11 @@
 `timescale 1ns / 1ps
+`include "define.vh"
 
 module taggedRegs_sim;
 
 	reg clk, rst, issue;
+	reg restore;
+	reg [31*`NUM_SRBITS-1:0] restore_tags_bus;
 	reg branch_issue, ujump_issue;
 	reg[4:0] raddr_A, raddr_B, waddr;
 	reg[7:0] w_tag;
@@ -15,11 +18,12 @@ module taggedRegs_sim;
 	reg ALU_cdb_request;
 	reg[39:0] ALU_cdb_out;
 
+	wire [31*`NUM_SRBITS-1:0] all_tags_bus;
 
-	taggedRegs regs(.clk(clk),.rst(rst),.issue(issue),
-		.ujump_wb(ujump_issue & ~jump_stall),.raddr_A(raddr_A),.raddr_B(raddr_B),
-		.waddr(waddr),.w_tag(w_tag),.cdb(cdb),.PCp4(PCp4),
-		.rdata_A(rdata_A),.rdata_B(rdata_B));
+	taggedRegs regs(.clk(clk),.rst(rst),.FU_regWrite(issue),.ujump_wb(ujump_issue & ~jump_stall),
+		.raddr_A(raddr_A),.raddr_B(raddr_B),.waddr(waddr),.w_tag(w_tag),.cdb(cdb),.PCp4(PCp4),
+		.rdata_A(rdata_A),.rdata_B(rdata_B),
+		.all_tags_bus(all_tags_bus),.restore(restore),.restore_tags_bus(restore_tags_bus));
 
 	common_data_bus cd_b(.clk(clk),.rst(rst),
 		.ALU_cdb_request(ALU_cdb_request),.mul_cdb_request(1'b0),.div_cdb_request(1'b0),.ls_cdb_request(1'b0),
@@ -78,6 +82,14 @@ module taggedRegs_sim;
         // 72ns: ujump_issue=0 => end jump sequence
         #10;
         ujump_issue = 0;
+
+        // Test RAT snapshot & restore
+        #10;
+        // Capture current tags
+        restore_tags_bus = all_tags_bus;
+        restore = 1;
+        #2 restore = 0;
+        $display("Restored tags bus: %h", restore_tags_bus);
 	end
 
 	always #5 clk = ~clk;

@@ -3,7 +3,7 @@
 `include "define.vh"
 
 module unit_div(
-	input clk, rst, issue,
+	input clk, rst, issue, flush,
 	input[`NUM_CDBBITS-1:0]cdb,
 
 	input[7:0]  q1_in, q2_in,
@@ -29,15 +29,15 @@ module unit_div(
 
     wire FU_result_taken = cdb[`CDB_ON_FIELD] && cdb[`CDB_FU_FIELD] == `FU_DIV_TAG;
 
-    RS_generic_line rs1_div(.clk(clk), .rst(rst), .issue(rs1_issue), .FU_result_taken(rs1_FU_result_taken),
+    RS_generic_line rs1_div(.clk(clk), .rst(rst), .issue(rs1_issue), .flush(flush), .FU_result_taken(rs1_FU_result_taken),
         .cdb(cdb), .q1_in(q1_in), .q2_in(q2_in), .v1_in(v1_in), .v2_in(v2_in),
         .data_ready(rs1_data_ready), .busy(rs1_busy), .v1(rs1_v1), .v2(rs1_v2));
 
-    RS_generic_line rs2_div(.clk(clk), .rst(rst), .issue(rs2_issue), .FU_result_taken(rs2_FU_result_taken),
+    RS_generic_line rs2_div(.clk(clk), .rst(rst), .issue(rs2_issue), .flush(flush), .FU_result_taken(rs2_FU_result_taken),
         .cdb(cdb), .q1_in(q1_in), .q2_in(q2_in), .v1_in(v1_in), .v2_in(v2_in),
         .data_ready(rs2_data_ready), .busy(rs2_busy), .v1(rs2_v1), .v2(rs2_v2));
 
-    RS_generic_line rs3_div(.clk(clk), .rst(rst), .issue(rs3_issue), .FU_result_taken(rs3_FU_result_taken),
+    RS_generic_line rs3_div(.clk(clk), .rst(rst), .issue(rs3_issue), .flush(flush), .FU_result_taken(rs3_FU_result_taken),
         .cdb(cdb), .q1_in(q1_in), .q2_in(q2_in), .v1_in(v1_in), .v2_in(v2_in),
         .data_ready(rs3_data_ready), .busy(rs3_busy), .v1(rs3_v1), .v2(rs3_v2));
 

@@ -5,7 +5,7 @@
 // Reservation station entry for store operations.
 // Latches store address/data, handles data forwarding from CDB, and signals when ready.
 module RS_store_line(
-    input clk, rst, issue,          // clk: system clock; rst: global reset; issue: latch new store
+    input clk, rst, issue, flush,    // clk: system clock; rst: global reset; issue: latch new store; flush: clear RS on mispredict
     input result_taken,             // result_taken: free RS when store dispatched
     input [40:0] cdb,               // Common Data Bus: [valid][tag][data] for operand forwarding
     input [7:0] q_data_in,          // Tag for data operand if not available at issue
@@ -29,6 +29,7 @@ assign data_ready = busy && q_data == 8'b0;   // Data ready when no pending tag
 // Busy control
 always @(posedge clk or posedge rst) begin    // Busy flag control
     if (rst) busy <= 1'b0;                    // Clear on reset
+    else if (flush) busy <= 1'b0;              // Clear on mispredict
     else if (issue) busy <= 1'b1;             // Set on issue
     else if (result_taken) busy <= 1'b0;      // Clear on dispatch
 end
@@ -38,6 +39,9 @@ always @(posedge clk or posedge rst) begin    // Data operand latch/forwarding
     if (rst) begin
         q_data <= 8'b0;                       // Clear tag on reset
         data   <= 32'b0;                      // Clear data on reset
+    end else if (flush) begin                  // Clear on mispredict
+        q_data <= 8'b0;
+        data   <= 32'b0;
     end else if (issue) begin
         if (init_clk_cdb_match_q) begin       // Immediate data forward at issue
             q_data <= 8'b0;
@@ -57,6 +61,9 @@ always @(posedge clk or posedge rst) begin    // Address and mem control latch
     if (rst) begin
         addr        <= 32'b0;                 // Clear address on reset
         mem_u_b_h_w <= 3'b0;                  // Clear control on reset
+    end else if (flush) begin
+        addr        <= 32'b0;                 // Clear address on mispredict
+        mem_u_b_h_w <= 3'b0;                  // Clear control on mispredict
     end else if (issue) begin
         addr        <= addr_in;               // Latch address
         mem_u_b_h_w <= mem_u_b_h_w_in;        // Latch mem control

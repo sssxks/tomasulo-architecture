@@ -9,7 +9,7 @@
 //    captures its result, and then announces it on the CDB.
 //-----------------------------------------------------------------------------
 module unit_ALU(
-    input clk, rst, issue,
+    input clk, rst, issue, flush,
     input[`NUM_CDBBITS-1:0] cdb,             // Common Data Bus (tag + data)
     input[3:0]  ALUControl_in,               // operation code
     input[7:0]  q1_in, q2_in,                // tags of operands
@@ -49,7 +49,7 @@ wire FU_result_taken = cdb[`CDB_ON_FIELD]
 // Each tracks its own tag/data readiness and issues into this unit.
 //-----------------------------------------------------------------------------
 RS_ALU_line rs1_alu(
-    .clk(clk), .rst(rst), .issue(rs1_issue),
+    .clk(clk), .rst(rst), .issue(rs1_issue), .flush(flush),
     .FU_result_taken(rs1_FU_result_taken),
     .cdb(cdb),
     .q1_in(q1_in), .q2_in(q2_in),
@@ -58,15 +58,17 @@ RS_ALU_line rs1_alu(
     .v1(rs1_v1), .v2(rs1_v2),
     .ALUControl_in(ALUControl_in), .ALUControl(rs1_ALUControl)
 );
-RS_ALU_line rs2_alu(.clk(clk),.rst(rst),.issue(rs2_issue),.FU_result_taken(rs2_FU_result_taken),
-	.cdb(cdb),.q1_in(q1_in),.q2_in(q2_in),.v1_in(v1_in),.v2_in(v2_in),
-	.data_ready(rs2_data_ready),.busy(rs2_busy),.v1(rs2_v1),.v2(rs2_v2),
-	.ALUControl_in(ALUControl_in),.ALUControl(rs2_ALUControl));
+RS_ALU_line rs2_alu(
+    .clk(clk),.rst(rst),.issue(rs2_issue),.flush(flush),.FU_result_taken(rs2_FU_result_taken),
+    .cdb(cdb),.q1_in(q1_in),.q2_in(q2_in),.v1_in(v1_in),.v2_in(v2_in),
+    .data_ready(rs2_data_ready),.busy(rs2_busy),.v1(rs2_v1),.v2(rs2_v2),
+    .ALUControl_in(ALUControl_in),.ALUControl(rs2_ALUControl));
 
-RS_ALU_line rs3_alu(.clk(clk),.rst(rst),.issue(rs3_issue),.FU_result_taken(rs3_FU_result_taken),
-	.cdb(cdb),.q1_in(q1_in),.q2_in(q2_in),.v1_in(v1_in),.v2_in(v2_in),
-	.data_ready(rs3_data_ready),.busy(rs3_busy),.v1(rs3_v1),.v2(rs3_v2),
-	.ALUControl_in(ALUControl_in),.ALUControl(rs3_ALUControl));
+RS_ALU_line rs3_alu(
+    .clk(clk),.rst(rst),.issue(rs3_issue),.flush(flush),.FU_result_taken(rs3_FU_result_taken),
+    .cdb(cdb),.q1_in(q1_in),.q2_in(q2_in),.v1_in(v1_in),.v2_in(v2_in),
+    .data_ready(rs3_data_ready),.busy(rs3_busy),.v1(rs3_v1),.v2(rs3_v2),
+    .ALUControl_in(ALUControl_in),.ALUControl(rs3_ALUControl));
 
 //-----------------------------------------------------------------------------
 // Simple round-robin pointer (FU_poi) to round-robin among ready RS.
