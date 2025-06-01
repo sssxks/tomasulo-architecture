@@ -302,13 +302,13 @@ module  RV32core(
 		.ujump_wb(dispatch_signals.ujump_issue & ~hazard_ctrl.jump_stall),      // Jump writeback
 		// Register read ports
 		.raddr_A(id_stage.inst[19:15]),          // rs1 address
-		.rdata_A({rs1_operand.tag, rs1_operand.val}), // rs1 data with tag
+		.rdata_A_o(rs1_operand), // rs1 data with tag
 		.raddr_B(id_stage.inst[24:20]),          // rs2 address
-		.rdata_B({rs2_operand.tag, rs2_operand.val}), // rs2 data with tag
+		.rdata_B_o(rs2_operand), // rs2 data with tag
 		// Register write port
 		.waddr(id_stage.inst[11:7]),             // rd address
 		.w_tag(rs_tags.reg_w_tag),                 // Tag for renaming
-		.cdb({cdb_bus.valid, cdb_bus.tag, cdb_bus.data}), // Common data bus for updates
+		.cdb_i(cdb_bus), // Common data bus for updates
 		.PC(id_stage.pc),                        // PC for JAL/JALR link address
 		// Debug interface
 		.Debug_addr(dbg_if.debug_addr[4:0]),      // Debug register select

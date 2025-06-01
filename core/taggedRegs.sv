@@ -1,5 +1,4 @@
 `timescale 1ns / 1ps
-
 `include "define.vh"
 
 //-----------------------------------------------------------------------------
@@ -9,21 +8,25 @@
 //  - Updates tags on FU write-back and clears/completes on CDB commit or jump.
 //----------------------------------------------------------------------------- 
 module taggedRegs(
-	input clk, rst, FU_regWrite, ujump_wb,
-	input[4:0] raddr_A, raddr_B, waddr,
-	input[`NUM_SRBITS-1:0] w_tag,
-	input[`NUM_CDBBITS-1:0] cdb,
-	input[31:0] PC,
-	output[`NUM_CDBBITS-2:0] rdata_A, rdata_B,
+	input logic clk,
+    input logic rst,
+    input logic FU_regWrite,
+    input logic ujump_wb,
+	input logic[4:0] raddr_A, raddr_B, waddr,
+	input logic[`NUM_SRBITS-1:0] w_tag,
+	input cdb_bus_t cdb_i, // CHANGED
+	input logic[31:0] PC,
+	output tagged_data_t rdata_A_o, // CHANGED
+    output tagged_data_t rdata_B_o, // CHANGED
 
 	// Snapshot & restore ports
-	input restore,
-	input[`NUM_SRBITS*31-1:0] restore_tags_bus,
-	input[3:0] restore_index,
-	output[`NUM_SRBITS*31-1:0] all_tags_bus,
+	input logic restore,
+	input logic[`NUM_SRBITS*31-1:0] restore_tags_bus,
+	input logic[3:0] restore_index, // Assuming this index is for ROB, not directly used here for specific tag array index
+	output logic[`NUM_SRBITS*31-1:0] all_tags_bus,
 
-	input[4:0] Debug_addr,
-	output[39:0] Debug_regs
+	input logic[4:0] Debug_addr,
+	output logic[39:0] Debug_regs // Kept as [39:0] for direct compatibility if Test_signal expects it
 );
 //-----------------------------------------------------------------------------
 // Register file and tag storage
@@ -35,10 +38,13 @@ module taggedRegs(
 
 //-----------------------------------------------------------------------------
 // Read ports
-//  - rdata_A/B: concatenation of tag and register data, zero for x0.
+//  - rdata_A_o/B_o: concatenation of tag and register data, zero for x0.
 //----------------------------------------------------------------------------- 
-	assign rdata_A = (raddr_A == 0) ? 40'b0 : {tags[raddr_A], register[raddr_A]};
-	assign rdata_B = (raddr_B == 0) ? 40'b0 : {tags[raddr_B], register[raddr_B]};
+	assign rdata_A_o.val = (raddr_A == 0) ? 32'b0 : register[raddr_A];
+	assign rdata_A_o.tag = (raddr_A == 0) ? `NUM_SRBITS'b0 : tags[raddr_A];
+
+	assign rdata_B_o.val = (raddr_B == 0) ? 32'b0 : register[raddr_B];
+	assign rdata_B_o.tag = (raddr_B == 0) ? `NUM_SRBITS'b0 : tags[raddr_B];
 
 	wire addr_match[1:31];
 	wire cdb_match[1:31];
@@ -55,15 +61,14 @@ endgenerate
 //-----------------------------------------------------------------------------
 // Write-back matching logic
 //  - addr_match: when waddr equals register index. 
-//                (no need to check waddr==0, as implied by FU_regWrite)
 //  - cdb_match: when CDB broadcasts value, we check if we are the receiver
 //               by comparing the tag
 //----------------------------------------------------------------------------- 
 	genvar i;
 	generate
 		for(i=1;i<32;i=i+1) begin
-			assign addr_match[i] = waddr == i;
-			assign cdb_match[i] = (cdb[`CDB_ON_FIELD] && cdb[`CDB_TAG_FIELD] == tags[i]);
+			assign addr_match[i] = (waddr == i); // Ensure waddr is not 0 if FU_regWrite or ujump_wb is asserted for waddr
+			assign cdb_match[i] = (cdb_i.valid && cdb_i.tag == tags[i] && tags[i] != `NUM_SRBITS'b0); // Match only if tag is valid
 
 //-----------------------------------------------------------------------------
 // Per-register update logic
@@ -71,28 +76,32 @@ endgenerate
 //  - Value update: on CDB match write data, on ujump write PC+4.
 //----------------------------------------------------------------------------- 
 			always @(posedge clk or posedge rst) begin
-				if(rst) tags[i] <= 8'b0;
-				else if(FU_regWrite & addr_match[i]) tags[i] <= w_tag;
-				else if(cdb_match[i] | ujump_wb & addr_match[i]) tags[i] <= 8'b0;
+				if(rst) tags[i] <= `NUM_SRBITS'b0;
+				else if(FU_regWrite && addr_match[i] && waddr != 0) tags[i] <= w_tag; // Only write if waddr != 0
+				else if(cdb_match[i]) tags[i] <= `NUM_SRBITS'b0; // Clear tag on CDB match
+                else if(ujump_wb && addr_match[i] && waddr != 0) tags[i] <= `NUM_SRBITS'b0; // JAL/JALR writes PC+4, tag becomes 0
 			end
 
 			always @(posedge clk or posedge rst) begin
 				if(rst) register[i] <= 32'b0;
-				else if(ujump_wb & addr_match[i]) register[i] <= PC + 4;
-				else if(cdb_match[i]) register[i] <= cdb[`CDB_DATA_FIELD];
+				else if(ujump_wb && addr_match[i] && waddr != 0) register[i] <= PC + 4; // JAL/JALR
+				else if(cdb_match[i]) register[i] <= cdb_i.data; // Write data from CDB
 			end
 		end
 	endgenerate
 
 //-----------------------------------------------------------------------------
 // Restore snapshot logic
-integer ri;
+// This logic assumes restore_index is not used to select a specific bank of tags,
+// but rather that restore_tags_bus contains the full set of 31 tags to restore.
+integer ri; // SystemVerilog allows integer for loop variables in generate, but for always blocks, genvar is typical. Here, it's an always block.
 always @(posedge clk or posedge rst) begin
     if (rst) begin
-        // tags reset by individual always blocks
+        // tags are reset by their individual always blocks above
     end else if (restore) begin
-        for (ri = 1; ri < 32; ri = ri + 1)
+        for (ri = 1; ri < 32; ri = ri + 1) begin
             tags[ri] <= restore_tags_bus[(ri*`NUM_SRBITS-1) -: `NUM_SRBITS];
+        end
     end
 end
 

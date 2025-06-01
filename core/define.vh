@@ -113,3 +113,12 @@ typedef struct packed {
     logic [7:0] branch;
     logic [7:0] reg_w_tag; // This is the selected write tag
 } rs_issue_tags_t;
+
+typedef struct packed {
+    logic [2:0] ImmSel;
+    logic [3:0] ALU_op;
+    logic [3:0] JUMP_op;
+    logic       ALUSrcA;
+    logic       ALUSrcB;
+    logic       FU_regWrite;
+} id_control_signals_t;
