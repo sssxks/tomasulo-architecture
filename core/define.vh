@@ -1,5 +1,5 @@
 `define NUM_RS     3
-`define NUM_FU     5
+`define NUM_FU     6      // increased from 5 to add branch unit
 `define NUM_SRBITS 8
 `define NUM_CDBBITS 41
 
@@ -14,3 +14,4 @@
 `define FU_DIV_TAG   5'b00100
 `define FU_LOAD_TAG  5'b00010
 `define FU_STORE_TAG 5'b00001
+`define FU_BRANCH_TAG 5'b00011    // branch/jump unit tag

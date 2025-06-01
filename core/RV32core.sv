@@ -38,11 +38,14 @@ module  RV32core(
 	wire to_jump;             // Branch/jump taken flag
 	wire jump_stall;          // Stall due to unresolved branch/jump
 
+	// Branch predictor and fetch control signals
+	wire pred_taken;            // Branch predictor taken output
+	wire [31:0] pred_target;    // Branch predictor target output
+	wire use_misp;              // Mispredict redirect control
+	wire [31:0] fetch_pc_pred;  // Predicted next PC before mispredict
+
 	// ----- Instruction Fetch (IF) stage signals -----
-	wire[31:0] PC_IF;          // Current program counter
-	wire[31:0] next_PC_IF;     // Next program counter value
-	wire[31:0] PCp4_IF;        // PC+4 (sequential next address)
-	wire[31:0] PC_jump;        // Jump/branch target address
+	logic [31:0] PC_IF;          // Current program counter
 	wire[31:0] inst_IF;        // Fetched instruction
 
 	// ----- Decode and control signals -----
@@ -82,6 +85,7 @@ module  RV32core(
 	wire mul_cdb_request;      // Multiplier requesting CDB access
 	wire div_cdb_request;      // Divider requesting CDB access
 	wire load_cdb_request;     // Load unit requesting CDB access
+	wire branch_cdb_request;   // Branch unit requesting CDB access
 	
 	// Reservation station status signals
 	wire ALU_all_busy;         // All ALU reservation stations busy
@@ -96,6 +100,7 @@ module  RV32core(
 	wire[7:0] mul_issue_tag;   // Tag assigned to multiply operation
 	wire[7:0] div_issue_tag;   // Tag assigned to divide operation
 	wire[7:0] load_issue_tag;  // Tag assigned to load operation
+	wire[7:0] branch_issue_tag; // Tag assigned to branch operation
 	wire[7:0] reg_w_tag;       // Tag assigned to destination register
 	
 	// Data outputs from functional units to CDB
@@ -103,33 +108,56 @@ module  RV32core(
 	wire[39:0] mul_cdb_in;     // Multiply result with tag
 	wire[39:0] div_cdb_in;     // Divide result with tag
 	wire[39:0] load_cdb_in;    // Load result with tag
+	wire[39:0] branch_cdb_in;  // Branch result with tag
 
 	// Common Data Bus - 41 bits: valid bit + 8-bit tag + 32-bit data
 	wire[40:0] cdb;            // [40]=valid, [39:32]=tag, [31:0]=data
 
 
 	// ROB integration
-	wire rob_alloc;
-	wire [31:0] rob_alloc_pc;
-	wire rob_alloc_pred_taken;
-	wire [31:0] rob_alloc_pred_target;
-	wire [7:0] rob_alloc_dest_tag;
-	wire rob_commit_valid;
-	wire rob_commit_is_branch;
-	wire rob_commit_mispredict;
-	wire rob_commit_actual_taken;
-	wire [31:0] rob_commit_actual_target;
-	wire [7:0] rob_commit_dest_tag;
-	wire [31:0] rob_commit_value;
-	wire [3:0] rob_commit_index;
+	logic rob_alloc;
+	logic [31:0] rob_alloc_pc;
+	logic rob_alloc_pred_taken;
+	logic [31:0] rob_alloc_pred_target;
+	logic [7:0] rob_alloc_dest_tag;
 	wire [31*`NUM_SRBITS-1:0] rob_commit_tags_bus;
 	wire [31*`NUM_SRBITS-1:0] all_tags_bus;
 
-	assign rob_alloc = ALU_issue | mul_issue | div_issue | load_issue | store_issue | branch_issue | ujump_issue;
-	assign rob_alloc_pc = PC_ID;
-	assign rob_alloc_pred_taken = branch_issue & pred_taken;
-	assign rob_alloc_pred_target = pred_target;
-	assign rob_alloc_dest_tag = reg_w_tag;
+	// Struct for ROB commit signals
+	typedef struct packed {
+		logic valid;
+		logic is_branch;
+		logic mispredict;
+		logic actual_taken;
+		logic [31:0] actual_target;
+		logic [7:0] dest_tag;
+		logic [31:0] value;
+		logic [3:0] index;
+		logic [31*`NUM_SRBITS-1:0] tags_bus;
+	} rob_commit_t;
+	rob_commit_t rob_commit;
+
+	// Compute ROB allocation signals
+	always_comb begin
+		rob_alloc            = ALU_issue | mul_issue | div_issue | load_issue | store_issue | branch_issue | ujump_issue;
+		rob_alloc_pc         = PC_ID;
+		rob_alloc_pred_taken = branch_issue & pred_taken;
+		rob_alloc_pred_target= pred_target;
+		rob_alloc_dest_tag   = reg_w_tag;
+	end
+
+	// Pack ROB commit outputs into struct
+	always_comb begin
+		rob_commit.valid         = rob_commit_valid;
+		rob_commit.is_branch     = rob_commit_is_branch;
+		rob_commit.mispredict    = rob_commit_mispredict;
+		rob_commit.actual_taken  = rob_commit_actual_taken;
+		rob_commit.actual_target = rob_commit_actual_target;
+		rob_commit.dest_tag      = rob_commit_dest_tag;
+		rob_commit.value         = rob_commit_value;
+		rob_commit.index         = rob_commit_index;
+		rob_commit.tags_bus      = rob_commit_tags_bus;
+	end
 
 	// Instantiate ROB with RAT checkpoints
 	ROB rob0(
@@ -143,68 +171,43 @@ module  RV32core(
 		.alloc_pred_target(rob_alloc_pred_target),
 		.alloc_dest_tag(rob_alloc_dest_tag),
 		.cdb(cdb),
-		.commit_valid(rob_commit_valid),
-		.commit_is_branch(rob_commit_is_branch),
-		.commit_mispredict(rob_commit_mispredict),
-		.commit_actual_taken(rob_commit_actual_taken),
-		.commit_actual_target(rob_commit_actual_target),
-		.commit_dest_tag(rob_commit_dest_tag),
-		.commit_value(rob_commit_value),
-		.commit_index(rob_commit_index),
-		.commit_tags_bus(rob_commit_tags_bus)
+		.commit_valid(rob_commit.valid),
+		.commit_is_branch(rob_commit.is_branch),
+		.commit_mispredict(rob_commit.mispredict),
+		.commit_actual_taken(rob_commit.actual_taken),
+		.commit_actual_target(rob_commit.actual_target),
+		.commit_dest_tag(rob_commit.dest_tag),
+		.commit_value(rob_commit.value),
+		.commit_index(rob_commit.index),
+		.commit_tags_bus(rob_commit.tags_bus)
 	);
-
-	// Predictor outputs
-	wire pred_taken;
-	wire [31:0] pred_target;
 
 	// Instantiate branch predictor
 	BranchPredictor bp0(
 		.clk(debug_clk),
 		.rst(rst),
 		.pc(PC_IF),
-		.update(rob_commit_valid & rob_commit_is_branch),
-		.update_taken(rob_commit_actual_taken),
-		.update_target(rob_commit_actual_target),
+		.update(rob_commit.valid & rob_commit.is_branch),
+		.update_taken(rob_commit.actual_taken),
+		.update_target(rob_commit.actual_target),
 		.taken(pred_taken),
 		.target(pred_target)
 	);
 
 	// ----- Instruction Fetch (IF) Stage -----
-	// Program Counter register - only updates when no stalls are active
-	REG32 REG_PC(
-		.clk(debug_clk),
-		.rst(rst),
-		.CE(~normal_stall),  // Enable only when no stalls
-		.D(next_PC_IF),                    // Next PC value
-		.Q(PC_IF)                         // Current PC output
-	);
-
-	// PC+4 adder for sequential execution
-	add_32 add_IF(
-		.a(PC_IF),
-		.b(32'd4),
-		.c(PCp4_IF)                       // PC+4 result
-	);
-
-	// Predictor-driven PC selection
-	// First: prediction between PC+4 and predicted target
-	MUX2T1_32 mux_pred(
-		.I0(PCp4_IF),
-		.I1(pred_target),
-		.s(pred_taken),
-		.o(fetch_pc_pred)
-	);
-
-	// Then: mispredict redirect
-	wire use_misp = rob_commit_valid & rob_commit_mispredict;
-	wire [31:0] fetch_pc_pred;
-	MUX2T1_32 mux_IF(
-		.I0(fetch_pc_pred),
-		.I1(rob_commit_actual_target),
-		.s(use_misp),
-		.o(next_PC_IF)
-	);
+	// Program Counter update logic using SystemVerilog always_ff
+	always_ff @(posedge debug_clk or posedge rst) begin
+		if (rst) begin
+			PC_IF <= 32'd0;
+		end else if (~normal_stall) begin
+			if (rob_commit.valid & rob_commit.mispredict)
+				PC_IF <= rob_commit.actual_target;
+			else if (pred_taken)
+				PC_IF <= pred_target;
+			else
+				PC_IF <= PC_IF + 32'd4;
+		end
+	end
 
 	// Instruction memory (ROM) - fetches instruction at current PC
 	// Uses PC[8:2] as word address (PC is byte-addressed)
@@ -262,6 +265,7 @@ module  RV32core(
 	tristate #(8) mul_tag(.dout(reg_w_tag), .din(mul_issue_tag), .en(mul_issue));
 	tristate #(8) div_tag(.dout(reg_w_tag), .din(div_issue_tag), .en(div_issue));
 	tristate #(8) load_tag(.dout(reg_w_tag), .din(load_issue_tag), .en(load_issue));
+	tristate #(8) branch_tag(.dout(reg_w_tag), .din(branch_issue_tag), .en(branch_issue));
 
 	// Register file with register renaming and checkpoint support
 	taggedRegs tregs(
@@ -285,9 +289,9 @@ module  RV32core(
 		.Debug_regs(debug_regs),
 		// RAT checkpoint/restore
 		.all_tags_bus(all_tags_bus),
-		.restore(rob_commit_valid & rob_commit_mispredict),
-		.restore_index(rob_commit_index),
-		.restore_tags_bus(rob_commit_tags_bus)
+		.restore(rob_commit.valid & rob_commit.mispredict),
+		.restore_index(rob_commit.index),
+		.restore_tags_bus(rob_commit.tags_bus)
 	);
 
 	// ----- ALU Input Selection -----
@@ -309,22 +313,51 @@ module  RV32core(
 
 	// ----- Branch/Jump Handling -----
 	// Handles branch/jump target calculation and condition evaluation
-	JumpHandle jh(
-		.branch_issue(branch_issue),        // Branch instruction flag
-		.ujump_issue(ujump_issue),          // Unconditional jump flag
-		.JUMP_op(JUMP_op),                 // Branch/jump operation type
-		// Register values with tags for condition checking
-		.q_rs1_in(rs1_data[39:32]),        // rs1 tag
-		.q_rs2_in(rs2_data[39:32]),        // rs2 tag
-		.rs1_data_in(rs1_data[31:0]),      // rs1 value
-		.rs2_data_in(rs2_data[31:0]),      // rs2 value
-		.imm(Imm),                         // Immediate for offset
-		.PC(PC_ID),                        // Current PC
-		.cdb(cdb),                         // Common data bus for updates
-		// Outputs
-		.PC_jump(PC_jump),                 // Calculated jump target
-		.to_jump(to_jump),                 // Take jump flag
-		.jump_stall(jump_stall)            // Stall due to unresolved branch
+	// Removed JumpHandle instantiation
+
+	// Load/Store unit - handles memory operations
+	unit_load_store ls(
+		.clk(debug_clk),
+		.rst(rst),
+		.flush(use_misp),                  // Add flush on mispredict
+		.cdb(cdb),                         // Common data bus for operand updates
+		.cdb_request(load_cdb_request),     // Request to broadcast load result
+		.cdb_out(load_cdb_in),              // Load result data for CDB
+		// Memory operation details
+		.ls_addr_in(ls_addr),               // Calculated memory address
+		.ls_u_b_h_w_in(inst_ID[14:12]),     // Size/sign: byte/half/word, signed/unsigned
+		// Store operation signals
+		.store_issue(store_issue & ~normal_stall),  // Issue store operation
+		.store_q_data_in(rs2_data[39:32]),  // Store data tag
+		.store_data_in(rs2_data[31:0]),     // Store data value
+		.store_all_busy(store_all_busy),    // All store buffer entries busy
+		// Load operation signals
+		.load_issue(load_issue & ~normal_stall),    // Issue load operation
+		.load_all_busy(load_all_busy),      // All load reservation stations busy
+		.load_issue_tag(load_issue_tag),    // Tag assigned to load operation
+		// Hazard detection
+		.store_conflict_stall(store_conflict_stall)  // Store conflicts with pending load/store
+	);
+
+	// Branch unit - handles branch operations
+	unit_branch br(
+		.clk(debug_clk),
+		.rst(rst),
+		.branch_issue(branch_issue & ~normal_stall),
+		.ujump_issue(ujump_issue & ~normal_stall),
+		.flush(use_misp),
+		.cdb(cdb),
+		.JUMP_op(JUMP_op),
+		.q1_in(rs1_data[39:32]),
+		.v1_in(rs1_data[31:0]),
+		.q2_in(rs2_data[39:32]),
+		.v2_in(rs2_data[31:0]),
+		.imm(Imm),
+		.PC(PC_ID),
+		.jump_stall(jump_stall),
+		.cdb_request(branch_cdb_request),
+		.cdb_out(branch_cdb_in),
+		.issue_tag(branch_issue_tag)
 	);
 
 	// ----- Load/Store Address Calculation -----
@@ -413,56 +446,29 @@ module  RV32core(
 		.issue_tag(div_issue_tag)           // Tag assigned to this operation
 	);
 
-	// Load/Store unit - handles memory operations
-	unit_load_store ls(
-		.clk(debug_clk),
-		.rst(rst),
-		.flush(use_misp),                  // Add flush on mispredict
-		.cdb(cdb),                         // Common data bus for operand updates
-		.cdb_request(load_cdb_request),     // Request to broadcast load result
-		.cdb_out(load_cdb_in),              // Load result data for CDB
-		// Memory operation details
-		.ls_addr_in(ls_addr),               // Calculated memory address
-		.ls_u_b_h_w_in(inst_ID[14:12]),     // Size/sign: byte/half/word, signed/unsigned
-		// Store operation signals
-		.store_issue(store_issue & ~normal_stall),  // Issue store operation
-		.store_q_data_in(rs2_data[39:32]),  // Store data tag
-		.store_data_in(rs2_data[31:0]),     // Store data value
-		.store_all_busy(store_all_busy),    // All store buffer entries busy
-		// Load operation signals
-		.load_issue(load_issue & ~normal_stall),    // Issue load operation
-		.load_all_busy(load_all_busy),      // All load reservation stations busy
-		.load_issue_tag(load_issue_tag),    // Tag assigned to load operation
-		// Hazard detection
-		.store_conflict_stall(store_conflict_stall)  // Store conflicts with pending load/store
-	);
-
-
 	// ----- Common Data Bus (CDB) -----
 	// Arbitrates between multiple functional units requesting to broadcast results
 	common_data_bus bus(
 		.clk(debug_clk),
 		.rst(rst),
-		.cdb(cdb),                         // Output: combined CDB signal
-		// ALU unit interface
-		.ALU_cdb_request(ALU_cdb_request),  // ALU requesting broadcast
-		.ALU_cdb_in(ALU_cdb_in),           // ALU result data
-		// Multiply unit interface
-		.mul_cdb_request(mul_cdb_request),  // Multiplier requesting broadcast
-		.mul_cdb_in(mul_cdb_in),           // Multiply result data
-		// Divide unit interface
-		.div_cdb_request(div_cdb_request),  // Divider requesting broadcast
-		.div_cdb_in(div_cdb_in),           // Divide result data
-		// Load/Store unit interface
-		.ls_cdb_request(load_cdb_request),  // Load unit requesting broadcast
-		.ls_cdb_in(load_cdb_in)            // Load result data
+		.ALU_cdb_request(ALU_cdb_request),
+		.mul_cdb_request(mul_cdb_request),
+		.div_cdb_request(div_cdb_request),
+		.ls_cdb_request(load_cdb_request),
+		.branch_cdb_request(branch_cdb_request),
+		.ALU_cdb_in(ALU_cdb_in),
+		.mul_cdb_in(mul_cdb_in),
+		.div_cdb_in(div_cdb_in),
+		.ls_cdb_in(load_cdb_in),
+		.branch_cdb_in(branch_cdb_in),
+		.cdb(cdb)
 	);
 
 
 
 	// ----- Debug Signal Multiplexer -----
 	// Selects internal signals for observation based on debug_addr
-	always @* begin
+	always_comb begin
 		case (debug_addr)
 			// ----- IF stage signals (32-39) -----
 			32: Test_signal = PC_IF;                // Program counter
