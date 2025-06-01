@@ -1,32 +1,35 @@
 `timescale 1ns / 1ps
-
 `include "define.vh"
 
-module unit_load_store(
-	input clk, rst, flush,
-	input[`NUM_CDBBITS-1:0]cdb,
-	output cdb_request,
-	output[`NUM_CDBBITS-2:0] cdb_out,
+module unit_load_store (
+    input clk,
+    input rst,
+    input flush,
+    input cdb_bus_t cdb_i,
+    output logic cdb_request,
+    output tagged_data_t load_cdb_data_o,
 
 	input[31:0] ls_addr_in,
 	input[2:0] ls_u_b_h_w_in,
 
 	input load_issue,
-	output load_all_busy,
+	output logic load_all_busy,
 	output[`NUM_SRBITS-1:0] load_issue_tag,
 
 	input store_issue,
-	input[7:0]  store_q_data_in,
-	input[31:0] store_data_in,
-	output store_all_busy,
-	output store_conflict_stall
+    input tagged_data_t store_data_i,   // CHANGED
+	output logic store_all_busy,
+	output logic store_conflict_stall
 );
 
 	reg[2:0] load_finish;
 	reg[2:0] load_from_store [2:0];
 	reg[31:0] load_data [2:0];
 
-	wire load_result_taken = cdb[`CDB_ON_FIELD] && cdb[`CDB_FU_FIELD] == `FU_LOAD_TAG;
+    wire [`NUM_CDBBITS-1:0] cdb_internal_packed;
+    assign cdb_internal_packed = {cdb_i.valid, cdb_i.tag, cdb_i.data};
+
+	wire load_result_taken = cdb_internal_packed[`CDB_ON_FIELD] && cdb_internal_packed[`CDB_FU_FIELD] == `FU_LOAD_TAG;
 
 	wire rs1_load_busy, rs2_load_busy, rs3_load_busy;
 	wire rs1_store_busy, rs2_store_busy, rs3_store_busy;
@@ -43,21 +46,21 @@ module unit_load_store(
 	wire[31:0] rs1_store_data, rs2_store_data, rs3_store_data;
 	wire[2:0] rs1_store_u_b_h_w, rs2_store_u_b_h_w, rs3_store_u_b_h_w;
 
-	wire rs1_load_issue = load_issue & ~rs1_load_busy;
-	wire rs2_load_issue = load_issue & rs1_load_busy & ~rs2_load_busy;
-	wire rs3_load_issue = load_issue & rs1_load_busy & rs2_load_busy & ~rs3_load_busy;
-	assign load_all_busy = rs1_load_busy & rs2_load_busy & rs3_load_busy;
+	wire rs1_load_issue = load_issue && !rs1_load_busy;
+	wire rs2_load_issue = load_issue && rs1_load_busy && !rs2_load_busy;
+	wire rs3_load_issue = load_issue && rs1_load_busy && rs2_load_busy && !rs3_load_busy;
+	assign load_all_busy = rs1_load_busy && rs2_load_busy && rs3_load_busy;
 	assign load_issue_tag = {`FU_LOAD_TAG, rs1_load_issue, rs2_load_issue, rs3_load_issue} &{`NUM_SRBITS{load_issue}};
 
-	RS_load_line rs1_load(.clk(clk),.rst(rst),.flush(flush),.issue(rs1_load_issue),.cdb(cdb),
+	RS_load_line rs1_load(.clk(clk),.rst(rst),.flush(flush),.issue(rs1_load_issue),.cdb(cdb_internal_packed),
 		.FU_result_taken(rs1_load_result_taken),.addr_in(ls_addr_in),.mem_u_b_h_w_in(ls_u_b_h_w_in),
 		.busy(rs1_load_busy),.addr(rs1_load_addr),.mem_u_b_h_w(rs1_load_u_b_h_w));
 
-	RS_load_line rs2_load(.clk(clk),.rst(rst),.flush(flush),.issue(rs2_load_issue),.cdb(cdb),
+	RS_load_line rs2_load(.clk(clk),.rst(rst),.flush(flush),.issue(rs2_load_issue),.cdb(cdb_internal_packed),
 		.FU_result_taken(rs2_load_result_taken),.addr_in(ls_addr_in),.mem_u_b_h_w_in(ls_u_b_h_w_in),
 		.busy(rs2_load_busy),.addr(rs2_load_addr),.mem_u_b_h_w(rs2_load_u_b_h_w));
 
-	RS_load_line rs3_load(.clk(clk),.rst(rst),.flush(flush),.issue(rs3_load_issue),.cdb(cdb),
+	RS_load_line rs3_load(.clk(clk),.rst(rst),.flush(flush),.issue(rs3_load_issue),.cdb(cdb_internal_packed),
 		.FU_result_taken(rs3_load_result_taken),.addr_in(ls_addr_in),.mem_u_b_h_w_in(ls_u_b_h_w_in),
 		.busy(rs3_load_busy),.addr(rs3_load_addr),.mem_u_b_h_w(rs3_load_u_b_h_w));
 
@@ -69,23 +72,26 @@ module unit_load_store(
 	wire no_s_addr_match = ~rs1_s_addr_match & ~rs2_s_addr_match & ~rs3_s_addr_match;
 
 	wire rs1_store_issue = store_issue & no_s_addr_match;
-	wire rs2_store_issue = store_issue & no_s_addr_match & rs1_store_busy ;
-	wire rs3_store_issue = store_issue & no_s_addr_match & rs1_store_busy & rs2_store_busy;
-	assign store_all_busy = rs1_store_busy & rs2_store_busy & rs3_store_busy;
-	assign store_conflict_stall = rs1_s_addr_match | rs2_s_addr_match | rs3_s_addr_match;
+    wire rs2_store_issue = store_issue & no_s_addr_match & rs1_store_busy;
+    wire rs3_store_issue = store_issue & no_s_addr_match & rs1_store_busy & rs2_store_busy;
+	assign store_all_busy = rs1_store_busy && rs2_store_busy && rs3_store_busy;
+	assign store_conflict_stall = (rs1_s_addr_match | rs2_s_addr_match | rs3_s_addr_match) && store_issue;
 
 	RS_store_line rs1_store(.clk(clk),.rst(rst),.flush(flush),.issue(rs1_store_issue),.result_taken(rs1_store_result_taken),
-		.cdb(cdb),.q_data_in(store_q_data_in),.addr_in(ls_addr_in),.data_in(store_data_in),
+		.cdb(cdb_internal_packed),
+        .q_data_in(store_data_i.tag),.addr_in(ls_addr_in),.data_in(store_data_i.val), // CHANGED
 		.mem_u_b_h_w_in(ls_u_b_h_w_in),.data_ready(rs1_store_data_ready),
 		.busy(rs1_store_busy),.addr(rs1_store_addr),.data(rs1_store_data),.mem_u_b_h_w(rs1_store_u_b_h_w));
 
 	RS_store_line rs2_store(.clk(clk),.rst(rst),.flush(flush),.issue(rs2_store_issue),.result_taken(rs2_store_result_taken),
-		.cdb(cdb),.q_data_in(store_q_data_in),.addr_in(ls_addr_in),.data_in(store_data_in),
+		.cdb(cdb_internal_packed),
+        .q_data_in(store_data_i.tag),.addr_in(ls_addr_in),.data_in(store_data_i.val), // CHANGED
 		.mem_u_b_h_w_in(ls_u_b_h_w_in),.data_ready(rs2_store_data_ready),
 		.busy(rs2_store_busy),.addr(rs2_store_addr),.data(rs2_store_data),.mem_u_b_h_w(rs2_store_u_b_h_w));
 
 	RS_store_line rs3_store(.clk(clk),.rst(rst),.flush(flush),.issue(rs3_store_issue),.result_taken(rs3_store_result_taken),
-		.cdb(cdb),.q_data_in(store_q_data_in),.addr_in(ls_addr_in),.data_in(store_data_in),
+		.cdb(cdb_internal_packed),
+        .q_data_in(store_data_i.tag),.addr_in(ls_addr_in),.data_in(store_data_i.val), // CHANGED
 		.mem_u_b_h_w_in(ls_u_b_h_w_in),.data_ready(rs3_store_data_ready),
 		.busy(rs3_store_busy),.addr(rs3_store_addr),.data(rs3_store_data),.mem_u_b_h_w(rs3_store_u_b_h_w));
 
@@ -95,8 +101,8 @@ module unit_load_store(
 	wire rs2_load_out = ~rs1_load_out & rs2_load_busy & ~load_finish[1] & ~|load_from_store[1];
 	wire rs3_load_out = ~rs2_load_out & rs3_load_busy & ~load_finish[0] & ~|load_from_store[0];
 	wire rs1_store_out = ~rs3_load_out & rs1_store_data_ready;
-	wire rs2_store_out = ~rs1_store_out & rs2_store_data_ready;
-	wire rs3_store_out = ~rs2_store_out & rs3_store_data_ready;
+	wire rs2_store_out = ~rs1_store_out & ~rs3_load_out & rs2_store_data_ready;
+	wire rs3_store_out = ~rs2_store_out & ~rs1_store_out & ~rs3_load_out & rs3_store_data_ready;
 
 	assign rs1_store_result_taken = rs1_store_out;
 	assign rs2_store_result_taken = rs2_store_out;
@@ -105,11 +111,21 @@ module unit_load_store(
 
 
 	wire rs1_load_on_cdb = load_finish[2];
-	wire rs2_load_on_cdb = ~load_finish[2] & load_finish[1];
-	wire rs3_load_on_cdb = ~load_finish[2] & ~load_finish[1] & load_finish[0];
+	wire rs2_load_on_cdb = ~load_finish[2] && load_finish[1];
+	wire rs3_load_on_cdb = ~load_finish[2] && ~load_finish[1] && load_finish[0];
 	assign cdb_request = |load_finish;
-	assign cdb_out = {`FU_LOAD_TAG, rs1_load_on_cdb, rs2_load_on_cdb, rs3_load_on_cdb,
-					rs1_load_on_cdb ? load_data[2] : rs2_load_on_cdb ? load_data[1] : load_data[0]};
+
+    wire [4:0] load_fu_tag_val = `FU_LOAD_TAG;
+    wire [2:0] load_rs_idx_val = rs1_load_on_cdb ? 3'b100 :
+                                (rs2_load_on_cdb ? 3'b010 :
+                                (rs3_load_on_cdb ? 3'b001 : 3'b000));
+    wire [31:0] load_val_temp_val = rs1_load_on_cdb ? load_data[2] :
+                               (rs2_load_on_cdb ? load_data[1] :
+                               (rs3_load_on_cdb ? load_data[0] : 32'b0));
+
+    assign load_cdb_data_o.tag = {load_fu_tag_val, load_rs_idx_val};
+    assign load_cdb_data_o.val = load_val_temp_val;
+
 
 	wire[2:0]mem_bhw;
 	wire[31:0] mem_addr, mem_store_data, mem_load_data;
@@ -168,22 +184,23 @@ module unit_load_store(
 			rs3_load_result_taken <= 1'b0;
 		end
 		else begin
-			rs1_load_result_taken <= cdb[`CDB_RS_FIELD] == 3'b100 && load_result_taken;
-			rs2_load_result_taken <= cdb[`CDB_RS_FIELD] == 3'b010 && load_result_taken;
-			rs3_load_result_taken <= cdb[`CDB_RS_FIELD] == 3'b001 && load_result_taken;
+			rs1_load_result_taken <= cdb_internal_packed[`CDB_RS_FIELD] == 3'b100 && load_result_taken;
+			rs2_load_result_taken <= cdb_internal_packed[`CDB_RS_FIELD] == 3'b010 && load_result_taken;
+			rs3_load_result_taken <= cdb_internal_packed[`CDB_RS_FIELD] == 3'b001 && load_result_taken;
 		end
 	end
 
 	always@(negedge clk or posedge rst) begin
-		if(rst)
+		if(rst) begin
 			load_finish <= 3'b0;
+		end
 		else begin
 			if(rs1_load_out |
 				load_from_store[2][2] & rs1_store_data_ready |
 				load_from_store[2][1] & rs2_store_data_ready |
 				load_from_store[2][0] & rs3_store_data_ready)
 				load_finish[2] <= 1'b1;
-			else if(cdb[`CDB_RS_FIELD] == 3'b100 && load_result_taken)
+			else if(cdb_internal_packed[`CDB_RS_FIELD] == 3'b100 && load_result_taken)
 				load_finish[2] <= 1'b0;
 
 			if(rs2_load_out |
@@ -191,7 +208,7 @@ module unit_load_store(
 				load_from_store[1][1] & rs2_store_data_ready |
 				load_from_store[1][0] & rs3_store_data_ready)
 				load_finish[1] <= 1'b1;
-			else if(cdb[`CDB_RS_FIELD] == 3'b010 && load_result_taken)
+			else if(cdb_internal_packed[`CDB_RS_FIELD] == 3'b010 && load_result_taken)
 				load_finish[1] <= 1'b0;
 
 			if(rs3_load_out |
@@ -199,14 +216,17 @@ module unit_load_store(
 				load_from_store[0][1] & rs2_store_data_ready |
 				load_from_store[0][0] & rs3_store_data_ready)
 				load_finish[0] <= 1'b1;
-			else if(cdb[`CDB_RS_FIELD] == 3'b001 && load_result_taken)
+			else if(cdb_internal_packed[`CDB_RS_FIELD] == 3'b001 && load_result_taken)
 				load_finish[0] <= 1'b0;
 		end
 	end
 
 	always@(negedge clk or posedge rst) begin
-		if(rst)
+		if(rst) begin
 			load_data[2] <= 32'b0;
+            load_data[1] <= 32'b0;
+            load_data[0] <= 32'b0;
+		end
 		else begin
 			if(rs1_load_out)
 				load_data[2] <= mem_load_data;
@@ -214,37 +234,25 @@ module unit_load_store(
 				load_data[2] <= rs1_store_data;
 			else if(load_from_store[2][1] & rs2_store_data_ready)
 				load_data[2] <= rs2_store_data;
-			else if(load_from_store[2][0] & rs2_store_data_ready)
+			else if(load_from_store[2][0] & rs3_store_data_ready)
 				load_data[2] <= rs3_store_data;
-		end
-	end
 
-	always@(negedge clk or posedge rst) begin
-		if(rst)
-			load_data[1] <= 32'b0;
-		else begin
 			if(rs2_load_out)
 				load_data[1] <= mem_load_data;
 			else if(load_from_store[1][2] & rs1_store_data_ready)
 				load_data[1] <= rs1_store_data;
 			else if(load_from_store[1][1] & rs2_store_data_ready)
 				load_data[1] <= rs2_store_data;
-			else if(load_from_store[1][0] & rs2_store_data_ready)
+			else if(load_from_store[1][0] & rs3_store_data_ready)
 				load_data[1] <= rs3_store_data;
-		end
-	end
 
-	always@(negedge clk or posedge rst) begin
-		if(rst)
-			load_data[0] <= 32'b0;
-		else begin
 			if(rs3_load_out)
 				load_data[0] <= mem_load_data;
 			else if(load_from_store[0][2] & rs1_store_data_ready)
 				load_data[0] <= rs1_store_data;
 			else if(load_from_store[0][1] & rs2_store_data_ready)
 				load_data[0] <= rs2_store_data;
-			else if(load_from_store[0][0] & rs2_store_data_ready)
+			else if(load_from_store[0][0] & rs3_store_data_ready)
 				load_data[0] <= rs3_store_data;
 		end
 	end
