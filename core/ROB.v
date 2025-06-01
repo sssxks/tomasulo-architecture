@@ -6,6 +6,7 @@
 module ROB(
     input clk,
     input rst,
+    input flush,
     // Snapshot tags bus for RAT checkpoint
     input [31*`NUM_SRBITS-1:0] alloc_tags_bus,
     // Allocation at issue
@@ -56,11 +57,19 @@ reg [31*`NUM_SRBITS-1:0] commit_tags_r;
 
 integer i;
 always @(posedge clk) begin
-    if (rst) begin
+    if (rst || flush) begin
         head <= 0; tail <= 0;
         entry_valid <= 0;
         entry_ready <= 0;
         commit_valid_r <= 0;
+        commit_is_branch_r <= 0;
+        commit_mispredict_r <= 0;
+        commit_index_r <= 0;
+        commit_actual_taken_r <= 0;
+        commit_actual_target_r <= 0;
+        commit_dest_tag_r <= 0;
+        commit_value_r <= 0;
+        commit_tags_r <= 0;
     end else begin
         // CDB writeback: update matching entry
         if (cdb[40]) begin

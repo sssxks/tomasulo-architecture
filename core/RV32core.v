@@ -135,6 +135,7 @@ module  RV32core(
 	ROB rob0(
 		.clk(debug_clk),
 		.rst(rst),
+		.flush(use_misp),             // Flush ROB entries on mispredict
 		.alloc_tags_bus(all_tags_bus),
 		.alloc(rob_alloc),
 		.alloc_pc(rob_alloc_pc),
